@@ -82,8 +82,9 @@ ifeq ($(DOCKER),)
 else
 	docker version
 	for arch in $(LINUX_ARCH); do \
+		mkdir -p build/docker/$${arch}; \
 	    cp Dockerfile build/docker/$${arch} ; \
-	    DOCKER_BUILDKIT=1 docker build --platform=$${arch} -t $(DOCKER_IMAGE_NAME):$${arch}-$(VERSION) build/docker/$${arch} ;\
+	    DOCKER_BUILDKIT=1 docker build --platform=$${arch} -t $(DOCKER_IMAGE_NAME):$${arch}-$(VERSION) -f build/docker/$${arch}/Dockerfile . ;\
 	done
 endif
 
