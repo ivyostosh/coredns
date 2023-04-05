@@ -35,6 +35,9 @@ GITHUB:=https://github.com/coredns/coredns/releases/download
 LINUX_ARCH:=amd64 arm arm64 mips64le ppc64le s390x
 DOCKER_IMAGE_NAME:=$(DOCKER)/$(NAME)
 DOCKER_IMAGE_LIST_VERSIONED:=$(shell echo $(LINUX_ARCH) | sed -e "s~[^ ]*~$(DOCKER_IMAGE_NAME):&\-$(VERSION)~g")
+BASE_IMAGE ?= gcr.io/distroless/static-debian11:nonroot
+BUILD_IMAGE ?= debian:stable-slim
+BINARY_BUILD_IMAGE ?= golang:1.20.3
 
 all:
 	@echo Use the 'release' target to download released binaries and build containers per arch, 'docker-push' to build and push a multi arch manifest.
@@ -82,8 +85,11 @@ ifeq ($(DOCKER),)
 else
 	docker version
 	for arch in $(LINUX_ARCH); do \
+		mkdir -p build/docker/$${arch} ; \
 	    cp Dockerfile build/docker/$${arch} ; \
-	    DOCKER_BUILDKIT=1 docker build --platform=$${arch} -t $(DOCKER_IMAGE_NAME):$${arch}-$(VERSION) build/docker/$${arch} ;\
+	    DOCKER_BUILDKIT=1 docker build --platform=$${arch} -t $(DOCKER_IMAGE_NAME):$${arch}-$(VERSION) \
+			--build-arg BASE_IMAGE=$(BASE_IMAGE) --build-arg BUILD_IMAGE=$(BUILD_IMAGE) \
+			--build-arg BINARY_BUILD_IMAGE=$(BINARY_BUILD_IMAGE) -f build/docker/$${arch}/Dockerfile . ;\
 	done
 endif
 
